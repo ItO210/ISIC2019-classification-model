@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Skin App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Skin Lesion Classifier</h1>
+
+        <form method="POST" enctype="multipart/form-data" class="card">
+            
+            <input type="file" name="image" accept="image/*" id="fileInput">
+
+            <!-- Image preview -->
+            <img id="preview" class="preview" alt="Image preview">
+
+            {% if result %}
+            <img src="data:image/jpeg;base64,{{ result.cam }}" class="grad">
+            {% endif %}
+
+            <button type="submit" id="submitBtn">Predict</button>
+
+            {% if result %}
+            <div class="result">
+                <h3>Top 3 Predictions</h3>
+                <ul>
+                    {% for label, confidence in result.predictions %}
+                    <li>
+                        <span class="label">{{ label }}</span>
+                        <span class="conf">{{ "%.2f%%"|format(confidence * 100) }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+        </form>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
