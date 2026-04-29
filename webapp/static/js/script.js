@@ -183,7 +183,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (form && submitBtn) {
         form.addEventListener("submit", () => {
-            submitBtn.textContent = "Analizando...";
+            const label = submitBtn.querySelector(".submit-btn__label");
+            if (label) label.textContent = "Analizando...";
             submitBtn.disabled = true;
         });
     }

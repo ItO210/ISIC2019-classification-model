@@ -9,41 +9,70 @@
     <title>Skin App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
-<body>
+<body class="{% if result and result.predictions %}page-results{% else %}page-upload{% endif %}">
     {% set ok = result and result.predictions %}
     <div class="container">
         <div class="upload-container{% if ok %} upload-container--results{% endif %}">
 
             {% if ok %}
-            <div class="card card--results">
-                <div class="card-header">
-                    <h1>Resultado del análisis</h1>
-                    <p class="subtitle">Mapa Grad-CAM y las clases más probables según el modelo</p>
+            <div class="results-shell">
+                <header class="results-header">
+                    <div class="results-header__lead">
+                        <div class="results-header__text">
+                            <h1 class="results-header__title">Resultado del análisis</h1>
+                            <p class="results-header__sub">Mapa Grad-CAM y las clases más probables según el modelo</p>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('index') }}" class="results-header__close" aria-label="Volver al inicio">×</a>
+                </header>
+
+                <div class="results-body">
+                    {% if result.cam %}
+                    <section class="results-panel">
+                        <h2 class="results-panel__heading">
+                            <span class="results-panel__heading-icon results-panel__heading-icon--heat" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                            </span>
+                            Mapa de calor (Grad-CAM)
+                        </h2>
+                        <img src="data:image/jpeg;base64,{{ result.cam }}" class="results-grad" alt="Mapa Grad-CAM sobre la imagen analizada">
+                    </section>
+                    {% endif %}
+
+                    <section class="results-panel">
+                        <h2 class="results-panel__heading">
+                            <span class="results-panel__heading-icon results-panel__heading-icon--chart" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 12v5"/><path d="M12 8v9"/><path d="M17 5v14"/></svg>
+                            </span>
+                            Top 3 predicciones
+                        </h2>
+                        <ul class="pred-list">
+                            {% for label, confidence in result.predictions %}
+                            <li class="pred-list__row pred-list__row--{{ loop.index }}">
+                                <span class="pred-list__rank">{{ loop.index }}</span>
+                                <span class="pred-list__label">{{ label }}</span>
+                                <div class="pred-list__bar-wrap">
+                                    <div class="pred-list__bar" style="width: {{ '%.1f'|format(confidence * 100) }}%"></div>
+                                </div>
+                                <span class="pred-list__pct">{{ '%.1f%%'|format(confidence * 100) }}</span>
+                                <span class="pred-list__chev" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                                </span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </section>
                 </div>
 
-                {% if result.cam %}
-                <div class="gradcam-wrap">
-                    <p class="gradcam-label">Mapa de calor (Grad-CAM)</p>
-                    <img src="data:image/jpeg;base64,{{ result.cam }}" class="grad" alt="Grad-CAM">
-                </div>
-                {% endif %}
+                <a href="{{ url_for('index') }}" class="results-cta">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.2 1.2L3 12l5.9 1.9a2 2 0 0 1 1.2 1.2L12 21l1.9-5.8a2 2 0 0 1 1.2-1.2L21 12l-5.9-1.9a2 2 0 0 1-1.2-1.2L12 3Z"/></svg>
+                    Analizar nueva imagen
+                </a>
 
-                <div class="result">
-                    <h3>Top 3 predicciones</h3>
-                    <ul>
-                        {% for label, confidence in result.predictions %}
-                        <li>
-                            <span class="label">{{ label }}</span>
-                            <div class="conf-bar-wrap">
-                                <div class="conf-bar" style="width: {{ '%.1f'|format(confidence * 100) }}%"></div>
-                            </div>
-                            <span class="conf">{{ '%.1f%%'|format(confidence * 100) }}</span>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-
-                <a href="{{ url_for('index') }}" class="submit-btn submit-btn--link">Analizar nueva imagen</a>
+                <p class="results-disclaimer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+                    Este análisis no reemplaza el diagnóstico profesional.
+                </p>
             </div>
             {% else %}
             <form method="POST" enctype="multipart/form-data" class="card" id="mainForm">
@@ -80,7 +109,10 @@
                     </div>
                 </div>
 
-                <button type="submit" class="submit-btn" id="submitBtn">Analizar imagen</button>
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.2 1.2L3 12l5.9 1.9a2 2 0 0 1 1.2 1.2L12 21l1.9-5.8a2 2 0 0 1 1.2-1.2L21 12l-5.9-1.9a2 2 0 0 1-1.2-1.2L12 3Z"/></svg>
+                    <span class="submit-btn__label">Analizar imagen</span>
+                </button>
 
                 {% if result and result.error %}
                 <p class="error-msg">{{ result.error }}</p>
