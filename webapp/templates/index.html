@@ -15,6 +15,16 @@
         <div class="upload-container{% if ok %} upload-container--results{% endif %}">
 
             {% if ok %}
+            {% set lesion_nombres = {
+                'MEL': 'Melanoma',
+                'NV': 'Nevus melanocítico',
+                'AK': 'Queratosis actínica',
+                'BCC': 'Carcinoma basocelular',
+                'BKL': 'Queratosis benigna',
+                'VASC': 'Lesión vascular',
+                'DF': 'Dermatofibroma',
+                'SCC': 'Carcinoma espinocelular'
+            } %}
             <div class="results-shell">
                 <header class="results-header">
                     <div class="results-header__lead">
@@ -50,7 +60,7 @@
                             {% for label, confidence in result.predictions %}
                             <li class="pred-list__row pred-list__row--{{ loop.index }}">
                                 <span class="pred-list__rank">{{ loop.index }}</span>
-                                <span class="pred-list__label">{{ label }}</span>
+                                <span class="pred-list__label">{{ lesion_nombres.get(label, label) }}</span>
                                 <div class="pred-list__bar-wrap">
                                     <div class="pred-list__bar" data-pct="{{ '%.1f'|format(confidence * 100) }}"></div>
                                 </div>

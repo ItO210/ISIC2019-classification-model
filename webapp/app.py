@@ -33,6 +33,18 @@ IMAGENET_STD  = [0.229, 0.224, 0.225]
 CLASSES = ['MEL', 'NV', 'AK', 'BCC', 'BKL', 'VASC', 'DF', 'SCC']
 NUM_CLASSES = len(CLASSES)
 
+# Nombres legibles para la UI (ISIC 2019 → español)
+CLASS_DISPLAY_NAMES = {
+    'MEL': 'Melanoma',
+    'NV': 'Nevus melanocítico',
+    'AK': 'Queratosis actínica',
+    'BCC': 'Carcinoma basocelular',
+    'BKL': 'Queratosis benigna',
+    'VASC': 'Lesión vascular',
+    'DF': 'Dermatofibroma',
+    'SCC': 'Carcinoma espinocelular',
+}
+
 ALLOWED_EXTENSIONS = (".png", ".jpg", ".jpeg")
 
 # ---------------------------
@@ -188,7 +200,7 @@ def index():
             top_probs = top_probs.squeeze().tolist()
 
             predictions = [
-                (CLASSES[idx], float(prob))
+                (CLASS_DISPLAY_NAMES[CLASSES[idx]], float(prob))
                 for idx, prob in zip(top_indices, top_probs)
             ]
 
