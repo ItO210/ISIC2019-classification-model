@@ -52,7 +52,7 @@
                                 <span class="pred-list__rank">{{ loop.index }}</span>
                                 <span class="pred-list__label">{{ label }}</span>
                                 <div class="pred-list__bar-wrap">
-                                    <div class="pred-list__bar" style="width: {{ '%.1f'|format(confidence * 100) }}%"></div>
+                                    <div class="pred-list__bar" data-pct="{{ '%.1f'|format(confidence * 100) }}"></div>
                                 </div>
                                 <span class="pred-list__pct">{{ '%.1f%%'|format(confidence * 100) }}</span>
                                 <span class="pred-list__chev" aria-hidden="true">

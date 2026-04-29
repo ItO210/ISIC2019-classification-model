@@ -20,6 +20,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const lightboxBackdrop = document.getElementById("lightboxBackdrop");
     const analyzeOverlay = document.getElementById("analyzeOverlay");
 
+    document.querySelectorAll(".pred-list__bar[data-pct]").forEach((el) => {
+        const v = el.getAttribute("data-pct");
+        if (v != null && v !== "") {
+            const n = parseFloat(v, 10);
+            if (!Number.isNaN(n)) el.style.width = `${n}%`;
+        }
+    });
+
     function showPreview(src) {
         if (!preview || !previewWrap || !dropPlaceholder || !dropZone) return;
         preview.src = src;
