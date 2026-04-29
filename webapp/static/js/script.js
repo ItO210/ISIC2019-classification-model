@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const lightboxImg = document.getElementById("lightboxImg");
     const lightboxClose = document.getElementById("lightboxClose");
     const lightboxBackdrop = document.getElementById("lightboxBackdrop");
+    const analyzeOverlay = document.getElementById("analyzeOverlay");
 
     function showPreview(src) {
         if (!preview || !previewWrap || !dropPlaceholder || !dropZone) return;
@@ -25,6 +26,9 @@ document.addEventListener("DOMContentLoaded", function () {
         previewWrap.style.display = "flex";
         dropPlaceholder.style.display = "none";
         dropZone.classList.add("has-image");
+        dropZone.classList.remove("is-preview-new");
+        void dropZone.offsetWidth;
+        dropZone.classList.add("is-preview-new");
     }
 
     function resetDropZone() {
@@ -32,6 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
         previewWrap.style.display = "none";
         dropPlaceholder.style.display = "flex";
         dropZone.classList.remove("has-image");
+        dropZone.classList.remove("is-preview-new");
         fileInput.value = "";
         imageUrlHidden.value = "";
         if (urlInputWrap) urlInputWrap.classList.remove("visible");
@@ -186,6 +191,11 @@ document.addEventListener("DOMContentLoaded", function () {
             const label = submitBtn.querySelector(".submit-btn__label");
             if (label) label.textContent = "Analizando...";
             submitBtn.disabled = true;
+            if (analyzeOverlay) {
+                analyzeOverlay.hidden = false;
+                analyzeOverlay.setAttribute("aria-hidden", "false");
+                document.body.style.overflow = "hidden";
+            }
         });
     }
 });

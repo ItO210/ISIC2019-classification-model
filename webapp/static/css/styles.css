@@ -827,6 +827,121 @@ button.url-link {
 }
 
 /* =========================================
+   Vista previa: entrada al cargar / soltar imagen
+   ========================================= */
+@keyframes preview-reveal {
+    from {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.drop-zone.is-preview-new .preview {
+    animation: preview-reveal 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* =========================================
+   Overlay mientras se analiza (POST al servidor)
+   ========================================= */
+.analyze-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.analyze-overlay[hidden] {
+    display: none !important;
+}
+
+.analyze-overlay__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(26, 44, 66, 0.5);
+    animation: analyze-backdrop-in 0.32s ease forwards;
+}
+
+.analyze-overlay__panel {
+    position: relative;
+    z-index: 1;
+    background: #fff;
+    padding: 26px 32px 24px;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    text-align: center;
+    max-width: 300px;
+    animation: analyze-panel-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.analyze-overlay__spinner {
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 14px;
+    border: 3px solid #e8edf4;
+    border-top-color: #574DC5;
+    border-radius: 50%;
+    animation: analyze-spin 0.75s linear infinite;
+}
+
+.analyze-overlay__title {
+    margin: 0 0 6px 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a2340;
+}
+
+.analyze-overlay__hint {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    line-height: 1.35;
+}
+
+@keyframes analyze-backdrop-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes analyze-panel-in {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes analyze-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .drop-zone.is-preview-new .preview {
+        animation: none !important;
+    }
+
+    .analyze-overlay__backdrop,
+    .analyze-overlay__panel {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    .analyze-overlay__spinner {
+        animation: analyze-spin 1.4s linear infinite;
+    }
+}
+
+/* =========================================
    Lightbox (vista ampliada)
    ========================================= */
 .lightbox {
