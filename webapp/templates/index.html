@@ -1,42 +1,104 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <title>Skin App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
+    {% set ok = result and result.predictions %}
     <div class="container">
-        <div class="upload-container">
-            <form method="POST" enctype="multipart/form-data" class="card">
-                <h1>Sube una imagen y comienza a aprender</h1>
-                <input type="file" name="image" accept="image/*" id="fileInput">
-                <!-- Image preview -->
-                <img id="preview" class="preview" alt="Image preview">
-                {% if result %}
-                <img src="data:image/jpeg;base64,{{ result.cam }}" class="grad">
+        <div class="upload-container{% if ok %} upload-container--results{% endif %}">
+
+            {% if ok %}
+            <div class="card card--results">
+                <div class="card-header">
+                    <h1>Resultado del análisis</h1>
+                    <p class="subtitle">Mapa Grad-CAM y las clases más probables según el modelo</p>
+                </div>
+
+                {% if result.cam %}
+                <div class="gradcam-wrap">
+                    <p class="gradcam-label">Mapa de calor (Grad-CAM)</p>
+                    <img src="data:image/jpeg;base64,{{ result.cam }}" class="grad" alt="Grad-CAM">
+                </div>
                 {% endif %}
-                <button type="submit" id="submitBtn">Predict</button>
-                {% if result %}
+
                 <div class="result">
-                    <h3>Top 3 Predictions</h3>
+                    <h3>Top 3 predicciones</h3>
                     <ul>
                         {% for label, confidence in result.predictions %}
                         <li>
                             <span class="label">{{ label }}</span>
-                            <span class="conf">{{ "%.2f%%"|format(confidence * 100) }}</span>
+                            <div class="conf-bar-wrap">
+                                <div class="conf-bar" style="width: {{ '%.1f'|format(confidence * 100) }}%"></div>
+                            </div>
+                            <span class="conf">{{ '%.1f%%'|format(confidence * 100) }}</span>
                         </li>
                         {% endfor %}
                     </ul>
                 </div>
+
+                <a href="{{ url_for('index') }}" class="submit-btn submit-btn--link">Analizar nueva imagen</a>
+            </div>
+            {% else %}
+            <form method="POST" enctype="multipart/form-data" class="card" id="mainForm">
+                <div class="card-header">
+                    <h1>Diagnóstico de piel</h1>
+                    <p class="subtitle">Sube una imagen y obtén una predicción al instante</p>
+                </div>
+
+                <div class="drop-zone" id="dropZone">
+                    <input type="file" name="image" accept="image/*" id="fileInput">
+                    <input type="hidden" name="image_url" id="imageUrlHidden">
+
+                    <div class="preview-wrap" id="previewWrap" style="display:none;">
+                        <img id="preview" class="preview" alt="Vista previa">
+                        <button type="button" class="change-btn" id="changeBtn">Cambiar imagen</button>
+                    </div>
+
+                    <div class="drop-placeholder" id="dropPlaceholder">
+                        <div class="upload-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="#4A7FE5" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                            </svg>
+                        </div>
+                        <button type="button" class="upload-btn" id="uploadBtn">Cargar imagen</button>
+                        <p class="drop-hint">o arrastra un archivo,</p>
+                        <p class="drop-hint-small">
+                            Pega la imagen
+                        </p>
+                        <div class="url-input-wrap" id="urlInputWrap">
+                            <input type="url" id="urlInput" placeholder="https://ejemplo.com/imagen.jpg" autocomplete="off">
+                            <button type="button" id="urlConfirm">Cargar</button>
+                            <button type="button" class="url-close-btn" id="urlPanelClose" aria-label="Cerrar panel URL">×</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">Analizar imagen</button>
+
+                {% if result and result.error %}
+                <p class="error-msg">{{ result.error }}</p>
                 {% endif %}
             </form>
+
             <div class="img-container">
-                <img src="../static/assets/icon-img.png" class="icon-photo"/>
+                <img src="{{ url_for('static', filename='assets/icon-img.png') }}" class="icon-photo" alt="Skin illustration">
             </div>
+            {% endif %}
+
         </div>
+    </div>
+
+    <div class="lightbox" id="lightbox" aria-hidden="true" hidden>
+        <div class="lightbox-backdrop" id="lightboxBackdrop"></div>
+        <button type="button" class="lightbox-close" id="lightboxClose" aria-label="Cerrar vista ampliada">×</button>
+        <img class="lightbox-img" id="lightboxImg" alt="Vista ampliada">
     </div>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>

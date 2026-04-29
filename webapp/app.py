@@ -8,6 +8,8 @@ import numpy as np
 import base64
 from io import BytesIO
 import os
+import threading
+from urllib.request import urlopen, Request as URLRequest
 
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image
@@ -76,7 +78,22 @@ MODEL_PATH = os.path.join(
     "../cnn/efficientnet_b3_300_best.pth"
 )
 
-model = load_model(MODEL_PATH)
+_model = None
+_model_lock = threading.Lock()
+
+
+def get_model():
+    """Carga el modelo una sola vez; en CPU puede tardar 30–90 s la primera vez."""
+    global _model
+    if _model is not None:
+        return _model
+    with _model_lock:
+        if _model is None:
+            print("Cargando pesos del modelo (EfficientNet-B3, ~47 MB)...", flush=True)
+            print("En CPU esto puede tardar un minuto; no cierres la terminal.", flush=True)
+            _model = load_model(MODEL_PATH)
+            print("Modelo listo.", flush=True)
+        return _model
 
 # ---------------------------
 # Transform
@@ -134,20 +151,29 @@ def index():
     result = None
 
     if request.method == "POST":
-        file = request.files.get("image")
+        file      = request.files.get("image")
+        image_url = request.form.get("image_url", "").strip()
 
-        if not file or file.filename == "":
-            return render_template("index.html", result={"error": "No file uploaded"})
+        has_file = file and file.filename != ""
+        has_url  = bool(image_url)
 
-        if not file.filename.lower().endswith(ALLOWED_EXTENSIONS):
-            return render_template("index.html", result={"error": "Invalid file type"})
+        if not has_file and not has_url:
+            return render_template("index.html", result={"error": "No se recibió ninguna imagen."})
 
         try:
-            # Load image
-            img_pil = Image.open(file).convert("RGB")
+            if has_file:
+                if not file.filename.lower().endswith(ALLOWED_EXTENSIONS):
+                    return render_template("index.html", result={"error": "Tipo de archivo no válido."})
+                img_pil = Image.open(file).convert("RGB")
+            else:
+                req_obj = URLRequest(image_url, headers={"User-Agent": "Mozilla/5.0"})
+                with urlopen(req_obj, timeout=10) as resp:
+                    img_pil = Image.open(BytesIO(resp.read())).convert("RGB")
 
             # Transform
             img_tensor = transform(img_pil).unsqueeze(0).to(device)
+
+            model = get_model()
 
             # ---------------------------
             # Prediction
@@ -192,4 +218,13 @@ def index():
 # Run
 # ---------------------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    # 5000 suele estar ocupado en macOS (Receptor AirPlay)
+    port = int(os.environ.get("PORT", 5001))
+    # debug=True + reloader por defecto carga el modelo DOS veces y suele “congelar” la terminal.
+    print(
+        f"Iniciando en http://127.0.0.1:{port} — el modelo carga en segundo plano; "
+        "la primera petición puede esperar hasta que termine.",
+        flush=True,
+    )
+    threading.Thread(target=get_model, daemon=True).start()
+    app.run(debug=True, use_reloader=False, threaded=True, port=port)
